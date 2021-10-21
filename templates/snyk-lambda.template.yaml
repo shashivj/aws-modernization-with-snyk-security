@@ -1,0 +1,61 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Snyk integration for AWS Lambda. (qs-1qqfgjgbc)
+Outputs:
+  SnykLambdaIntegrationRole:
+    Description: Snyk Lambda Integration Role ARN
+    Value: !GetAtt 'SnykLambdaIntegrationRole.Arn'
+  Version:
+    Description: Snyk Lambda Integration Version
+    Value: 1.0.2
+Metadata:
+  QSLint:
+    Exclusions: [W9006]
+  QuickStartDocumentation:
+    EntrypointName: "Snyk integration for AWS Lambda"
+    Order: "2"
+  LICENSE: Apache License, Version 2.0
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Snyk
+        Parameters:
+          - SnykExternalId
+    ParameterLabels:
+      SnykExternalId:
+        default: Snyk organization ID
+Parameters:
+  SnykExternalId:
+    Description: Locate the organization ID by logging in to https://app.snyk.io and navigating to Settings.
+    Type: String
+    AllowedPattern: '[a-z0-9-]{36}'
+    MinLength: 1
+Resources:
+  SnykLambdaIntegrationRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: arn:aws:iam::198361731867:root
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals:
+                'sts:ExternalId': !Ref 'SnykExternalId'
+      Path: /snyk/
+      Policies:
+        - PolicyName: SnykReadOnlyForLambda
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  [
+                    'lambda:ListFunctions',
+                    'lambda:GetFunction',
+                    'lambda:ListAliases',
+                    'lambda:GetAccountSettings'
+                  ]
+                Resource: '*'
