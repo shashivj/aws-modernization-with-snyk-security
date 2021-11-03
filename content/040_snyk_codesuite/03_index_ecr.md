@@ -1,7 +1,7 @@
 ---
 title: "ECR Integration"
 chapter: true
-weight: 53
+weight: 58
 ---
 
 ## Architecture
@@ -93,6 +93,8 @@ In order to integrated ECR with Snyk, you need to first create AWS IAM permissio
 aws iam create-policy --policy-name SnykECRPolicy --policy-document file://snyk-policy.json
 ```
 The content of `snyk-policy.json` file is below:
+
+
 ```
 {
  "Version": "2012-10-17",
@@ -121,23 +123,24 @@ The content of `snyk-policy.json` file is below:
 
 2. After the policy is successfully created, it is time to create an IAM role in the account 
 
-``` aws iam create-role --role-name SnykECRRole --assume-role-policy-document file://assume.json ```
+`aws iam create-role --role-name SnykECRRole --assume-role-policy-document file://assume.json` 
 
-The `assume.json` file contains :
+The `assume.json` file contains:
+
 
 ```
-{
- "Version": "2012-10-17",
- "Statement": [
-  {
-   "Effect": "Allow",
-   "Principal": {
-    "AWS": "arn:aws:iam::198361731867:user/ecr-integration-user"
-   },
-   "Action": "sts:AssumeRole"
-  }
- ]
-}
+    {
+    "Version": "2012-10-17",
+    "Statement": [
+    {
+    "Effect": "Allow",
+    "Principal": {
+        "AWS": "arn:aws:iam::198361731867:user/ecr-integration-user"
+    },
+    "Action": "sts:AssumeRole"
+        }
+        ]
+    }
 ```
 
 3. Note the role ARN , it will be used in the next section

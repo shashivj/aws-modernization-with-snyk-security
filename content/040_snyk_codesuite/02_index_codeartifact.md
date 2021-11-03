@@ -1,7 +1,7 @@
 ---
 title: "Code Artifact"
 chapter: true
-weight: 52
+weight: 56
 ---
 
 ## Architecture
@@ -39,7 +39,10 @@ Once the repository is successfully created you will see a message like the one 
 }
 ```
 Copy the `Arn`, and `cloneUrlHttp` fields in a separate place for usage later in the deployment stage
-### 2. Creating AWS CodeArtifact Domain and Repository
+### 2. Setting up CodeCommit Repo
+Once the repository has been created, 2 scripts have to be uploaded to the repo prior to kicking off the deployment of the CDK stack. Both of these scripts are located under the ```workshop-resources\scripts\``` directory. The `list_repos.py` script queries the CodeArtifact domain for all packages and their default display version and writes it to a requirements.txt file, the `pip_install.py` script manually steps through each pip install command to ensure any failures are graceful and recorded for the DevSecOps engineer to identify. Both of these files can be manually uploaded to codecommit through the AWS Console. See <a href="https://docs.aws.amazon.com/codecommit/latest/userguide/how-to-create-file.html" target="_blank">here</a> for instructions on uploading files to AWS CodeCommit.
+
+### 3. Creating AWS CodeArtifact Domain and Repository
 To Create a new CodeArtifact Domain and repository using CLI, run the following commands:
 
 ```bash
@@ -84,7 +87,7 @@ The above command should return a response like below
     }
 }
 ```
-### 3. Associating CodeArtifact domain with external connection
+### 4. Associating CodeArtifact domain with external connection
 The next step is associating the repository with an external connection. There are several external repositories available as external connections, but for this workshop we will be utilizing the Python Package Index `public:pypi`. To add this external connection run:
 ```bash
 aws codeartifact associate-external-connection --external-connection public:pypi \
@@ -112,7 +115,7 @@ Which should return a response like below:
 ```
 This repository created will be the source for the Codepipeline that runs the Snyk CodeArtifact scan. The CodePipeline triggers daily and builds a `requirements.txt` file by listing the packages in CodeArtifact domain.
 
-### 4. Populating the new repository
+### 5. Populating the new repository
 Now that your codeartifact repository has been set up. You need to configure your cli to pull packages using it. To do this, log into the AWS Management Console and navigate to CodeArtifact and locate your repository
 ![Snyk CodeArtifact Repo](/images/codeartifact-repodetails.png "repo")
 
@@ -142,16 +145,21 @@ You should receive the response:
 Successfully configured pip to use AWS CodeArtifact repository https://demo-domain-112233445566.d.codeartifact.us-east-1.amazonaws.com/pypi/pypi-store/
 Login expires in 12 hours at 2021-05-07 23:58:57-04:00
 ```
-With the repository configured, run ```bash pip install aws-cdk.core``` to pull down some packages into the repository. If you navigate back into the CodeArtifact console, you will see that there are now multiple packages in the repository
+With the repository configured, run ```pip install aws-cdk.core``` to pull down some packages into the repository. If you navigate back into the CodeArtifact console, you will see that there are now multiple packages in the repository
 
 ![Snyk CodeArtifact Packages](/images/codeartifact-packages.png "packages")
-### 2. Setting up CDK
 
-> Refer to CDK setup section (TODO)
-
-## Deployment
-> How to stage the scripts for workshop readers to get for their repo
-Once the repository has been created, 2 scripts have to be uploaded to the repo prior to kicking off the deployment of the CDK stack.
+### 6. Setting up CDK
+To Deploy the cdk resources, clone down the workshop base. Navigate to `workshop-resources/cdk/snyk-codesuite-cdk`. Once in the repo initialize the virtual env and run
+```
+pip install -r requirements.txt
+```
+Set your AWS Credentials in the CLI then navigate to the file located at ```workshop-resources/cdk/snyk-codesuite-cdk/cdk_stack_deploy/cdk_snyk_codeartifact_stack.py```and fill in the required parameters saved from previous steps. 
+Log into the AWS console or use the CLI to create 2 new parameters that the Codebuild job references. For steps on creating the parameter, use this <a href="https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-su-create.html" target="_blank">link</a> .
+Once those are created and the parameters filed out in the CDK file, the stack can be deployed by running 
+```
+cdk deploy cdk-snyk-ca-stack
+```
 
 ## Checking results in S3
 After the CodePipeline successfully runs and the build job is completed you should have results in the output section of the S3 bucket as well as in the Snyk Console. Let's start with the S3 ouput as this is the raw build output. Under the bucket created in the stack which can be found in the resources section of the Cloudformation stack, navigate to the ```artifactbucket\outputs\``` subfolder and locate the folder that matches the date & time of the last build project that ran. The build outputs two files, one with the requirements.txt file generated from the AWS CodeArtifact domain and the other a list of packages which could not successfully be installed by pip and therefore unable to be scanned by the Snyk CLI (These packages can be analyzed for incompatibilities such as python versions etc.)

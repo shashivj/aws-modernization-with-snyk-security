@@ -1,7 +1,7 @@
 ---
 title: "Code Commit"
 chapter: true
-weight: 51
+weight: 52
 ---
 
 ## Architecture
@@ -46,8 +46,15 @@ Copy the `Arn`, and `cloneUrlHttp` fields in a separate place for usage later in
 This repository will be the source for the CodePipeline we'll deploy next. Every time a developer commits his/her code to this repository, the Snyk pipeline will trigger the scans and provide information on the vulnerabilities found in the Python package dependencies. 
 
 ### 2. Setting up CDK
-
-> Refer to CDK setup section (TODO)
+To Deploy the cdk resources, clone down the workshop base. Navigate to `workshop-resources/cdk/snyk-codesuite-cdk`. Once in the repo initialize the virtual env and run
+```
+pip install -r requirements.txt
+```
+Set your AWS Credentials in the CLI then navigate to the file located at ```workshop-resources/cdk/snyk-codesuite-cdk/cdk_snyk_construct/cdk_snyk_construct_stack.py```and fill in the required parameters saved from previous steps.
+Once the parameters are filed out run the command
+```
+cdk deploy cdk-snyk-stack
+```
 
 ## Deployment
 
